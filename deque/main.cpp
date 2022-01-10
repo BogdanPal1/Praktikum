@@ -1,51 +1,29 @@
 #include <iostream>
-
-struct Node
-{
-    Node(int value, Node* next, Node* prev) : _val(value), _next(next), _prev(prev){}
-    int _val;
-    Node* _next;
-    Node* _prev;
-};
+#include <vector>
 
 class Deque
 {
 public:
-    Deque() = default;
     explicit Deque(int capacity);
-    ~Deque();
     void push_back(int value);
     void push_front(int value);
     void pop_back();
     void pop_front();
 private:
-    Node* _head;
-    Node* _tail;
-    int _capacity;
+    std::vector<int> _data;
+    int _front;
+    int _back;
     int _size;
+    int _capacity;
+
 };
 
 Deque::Deque(int capacity)
 {
+    _size = 0;
     _capacity = capacity;
-    _tail = _head = nullptr;
-    _size = 0;
-}
-
-Deque::~Deque()
-{
-    _capacity = 0;
-
-    if (_size != 0)
-    {
-        while (_head != nullptr)
-        {
-            Node* temp = _head;
-            _head = _head->_next;
-            delete temp;
-        }
-    }
-    _size = 0;
+    _front = _back = -1;
+    _data.resize(_capacity);
 }
 
 void Deque::push_back(int value)
@@ -56,19 +34,21 @@ void Deque::push_back(int value)
         return;
     }
 
-    Node* newNode = new Node(value, nullptr, nullptr);
-    if (_size == 0)
+    if (_back == -1)
     {
-        _head = _tail = newNode;
-        ++_size;
+        ++_front;
+        ++_back;
+    }
+    else if (_back == _capacity - 1)
+    {
+        _back = 0;
     }
     else
     {
-        _tail->_next = newNode;
-        newNode->_prev = _tail;
-        _tail = newNode;
-        ++_size;
+        ++_back;
     }
+    _data[_back] = value;
+    ++_size;
 }
 
 void Deque::push_front(int value)
@@ -79,19 +59,21 @@ void Deque::push_front(int value)
         return;
     }
 
-    Node* newNode = new Node(value, nullptr, nullptr);
-    if (_size == 0)
+    if (_front == -1)
     {
-        _tail = _head = newNode;
-        ++_size;
+        ++_front;
+        ++_back;
+    }
+    else if(_front == 0)
+    {
+        _front = _capacity - 1;
     }
     else
     {
-        _head->_prev = newNode;
-        newNode->_next = _head;
-        _head = newNode;
-        ++_size;
+        --_front;
     }
+    _data[_front] = value;
+    ++_size;
 }
 
 void Deque::pop_back()
@@ -102,11 +84,24 @@ void Deque::pop_back()
         return;
     }
 
-    std::cout << _tail->_val << '\n';
-    Node* temp = _tail;
-    _tail = _tail->_prev;
-    delete temp;
-    --_size;
+    std::cout << _data[_back] << '\n';
+
+    if (_front == _back)
+    {
+        _front = -1;
+        _back = -1;
+        --_size;
+    }
+    else if (_back == 0)
+    {
+        _back = _capacity - 1;
+        --_size;
+    }
+    else
+    {
+        --_back;
+        --_size;
+    }
 }
 
 void Deque::pop_front()
@@ -117,11 +112,27 @@ void Deque::pop_front()
         return;
     }
 
-    std::cout << _head->_val << '\n';
-    Node* temp = _head;
-    _head = _head->_next;
-    delete temp;
-    --_size;
+    std::cout << _data[_front] << '\n';
+
+    if (_front == _back)
+    {
+        _front = -1;
+        _back = -1;
+        --_size;
+    }
+    else
+    {
+        if (_front == _capacity - 1)
+        {
+            _front = 0;
+            --_size;
+        }
+        else
+        {
+            ++_front;
+            --_size;
+        }
+    }
 }
 
 int main()
