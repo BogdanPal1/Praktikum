@@ -1,5 +1,5 @@
 /*
-ID 63588412
+ID 63681511
 Спринт 2. Задача "Дек".
 Палкин Богдан. Когорта 20.
 
@@ -49,26 +49,20 @@ push_front, pop_back, pop_front, то есть предоставлять
 class Deque
 {
 public:
-    explicit Deque(int capacity);
+    explicit Deque(int capacity) : _capacity(capacity)
+    {_data.resize(_capacity, 0);}
+
     void push_back(int value);
     void push_front(int value);
     void pop_back();
     void pop_front();
 private:
     std::vector<int> _data;
-    int _front;
-    int _back;
-    int _size;
-    int _capacity;
+    int _front = -1;
+    int _back = -1;
+    int _size = 0;
+    int _capacity = 0;
 };
-
-Deque::Deque(int capacity)
-{
-    _size = 0;
-    _capacity = capacity;
-    _front = _back = -1;
-    _data.resize(_capacity);
-}
 
 void Deque::push_back(int value)
 {
