@@ -1,5 +1,5 @@
 /*
-ID 63417695
+ID 63680652
 Спринт 2. Задача "Калькулятор".
 Палкин Богдан. Когорта 20.
 
@@ -68,6 +68,13 @@ bool isNumber(const std::string& str)
     return str.find_first_of("0123456789") != std::string::npos;
 }
 
+int floorDiv(int a, int b) {
+    div_t r = div(a, b);
+    if (r.rem != 0 && ((a < 0) ^ (b < 0)))
+        r.quot--;
+    return r.quot;
+}
+
 int main()
 {
     std::stack<int> numStack;
@@ -109,7 +116,7 @@ int main()
             numStack.pop();
             int b = numStack.top();
             numStack.pop();
-            numStack.push(std::floor(b / static_cast<double>(a)));
+            numStack.push(floorDiv(b, a));
         }
     }
     std::cout << numStack.top() << '\n';
