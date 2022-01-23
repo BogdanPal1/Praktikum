@@ -53,14 +53,15 @@ struct Cmp
 
 Iterator partition(Iterator begin, Iterator end, Cmp comp)
 {
-    Iterator pivot = std::prev(end, 1);
+    Iterator pivot = end - 1;
     Iterator i = begin;
 
-    for (Iterator j = begin; j != pivot; ++j)
+    for (Iterator j = begin; j != end - 1; ++j)
     {
         if (comp(j, pivot))
         {
-            std::swap(*i++, *j);
+            std::swap(*i, *j);
+            ++i;
         }
     }
     std::swap(*i, *pivot);
