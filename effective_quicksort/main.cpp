@@ -12,38 +12,78 @@ struct Competitor
     int _penalty = 0;
 };
 
-int partition(std::vector<Competitor>& vec, int left, int right)
-{
-    int pivot = vec[right]._solvedProblems;
-    int i = (left - 1);
+using Iterator = std::vector<Competitor>::iterator;
 
-    for (int j = left; j <= right - 1; j++)
+struct Cmp
+{
+    bool operator()(const Iterator& first, const Iterator& second)
     {
-        if (vec[j]._solvedProblems > pivot)
+        if (first->_solvedProblems == second->_solvedProblems)
         {
-            i++;
-            std::swap(vec[i], vec[j]);
+            if(first->_penalty == second->_penalty)
+            {
+                if (first->_name < second->_name)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else if (first->_penalty < second->_penalty)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else if (first->_solvedProblems > second->_solvedProblems)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
         }
     }
-    std::swap(vec[i + 1], vec[right]);
-    return (i + 1);
+};
+
+Iterator partition(Iterator begin, Iterator end, Cmp comp)
+{
+    Iterator pivot = std::prev(end, 1);
+    Iterator i = begin;
+
+    for (Iterator j = begin; j != pivot; ++j)
+    {
+        if (comp(j, pivot))
+        {
+            std::swap(*i++, *j);
+        }
+    }
+    std::swap(*i, *pivot);
+    return i;
 }
 
-void quickSort(std::vector<Competitor>& vec, int low, int high)
+void sort(Iterator begin, Iterator end, Cmp comp)
 {
-    if (low < high)
+    if (std::distance(begin, end) < 2)
     {
-        int pi = partition(vec, low, high);
-        quickSort(vec, low, pi - 1);
-        quickSort(vec, pi + 1, high);
+        return;
     }
+
+    Iterator pi = partition(begin, end, comp);
+    sort(begin, pi, comp);
+    sort(pi + 1, end, comp);
 }
 
 void print(const std::vector<Competitor>& vec)
 {
     for (const auto& c : vec)
     {
-        std::cout << c._name << " " << c._solvedProblems << '\n';
+        std::cout << c._name << '\n';
     }
 }
 
@@ -56,8 +96,8 @@ int main()
     int penalty = 0;
     std::string name = "";
 
-
     std::cin >> numOfCompetitors;
+
     for (int i = 0; i < numOfCompetitors; ++i)
     {
         std::cin >> name;
@@ -68,7 +108,8 @@ int main()
         v.push_back(c);
     }
 
-    quickSort(v, 0, v.size() - 1);
+    Cmp comp;
+    sort(v.begin(), v.end(), comp);
     print(v);
     return 0;
 }
