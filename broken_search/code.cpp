@@ -1,66 +1,89 @@
+/*
+ * ID 64548252
+ * Спринт 3. Задача "Поиск в сломанном массиве"
+ * Палкин Богдан. Когорта 20.
+ *
+ * -- ПРИНЦИП РАБОТЫ --
+ * По условию задания имеется отсортированный массив, к которому
+ * фактически был применен сдвиг. Это означает, что в массиве есть
+ * две отсортированные части, к которым можно применить бинарный поиск.
+ *
+ * Идея алгоритма была взята из статьи, доступной по следующей ссылке:
+ * https://www.geeksforgeeks.org/search-an-element-in-a-sorted-and-pivoted-array/
+ *
+ * -- ДОКАЗАТЕЛЬСТВО КОРРЕКТНОСТИ --
+ * По условию задания поиск в массиве, должен осуществляться за O(log N).
+ *
+ * В данной реализации так же как и в обычном алгоритме бинарного поиска
+ * на каждом шаге происходит разделение массива на две приблизительно равные по
+ * размеру части до тех пор пока не будет найден искомый элемент или индекс
+ * левой границы не превысит индекс правой(в этом случае считается, что элемент
+ * не найден и функция вернет значение -1). Отличием данной реализации является
+ * то, что после нахождения индекса середины массива, если элемент по данному
+ * индексу не равен искомому, происходит проверка на то, какая из частей является
+ * отсортированной. Временная сложность данной проверки равна О(1).
+ *
+ * Так как сложность обычного алгоритма бинарного поиска составляет
+ * O(log N), то и сложность алгоритма представленного в данном решении и
+ * основанного на обычном алгоритме бинарного поиска будет O(log N).
+ *
+ * -- ВРЕМЕННАЯ СЛОЖНОСТЬ --
+ * Как и для обычного алгоритма бинарного поиска временная сложность
+ * алгоритма, использованного для решения задачи, равна O(log N) из-за
+ * того, что на каждом шаге количество входных данных уменьшается в 2 раза.
+ *
+ * -- ПРОСТРАНСТВЕННАЯ СЛОЖНОСТЬ --
+ * Так как при работе алгоритма фактически необходимо место для хранения
+ * трех индексов и не выделяется дополнительной памяти для массива, простран-
+ * ственная сложность равна О(1).
+ */
+
 #include "solution.h"
 #include <vector>
 #include <cassert>
+#include <algorithm>
 
-int binSearch(const std::vector<int>& vec, int x, int left, int right)
+int pivot(const std::vector<int>& vec, int left, int right)
 {
     if (left > right)
     {
         return -1;
     }
 
+    if (left == right)
+    {
+        return left;
+    }
+
     int mid = (left + right) / 2;
-
-    if (vec[mid] == x)
-    {
+    if (mid < right && vec[mid] > vec[mid + 1] && vec.size() > 2)
         return mid;
-    }
 
-    if (vec[left] < vec[mid])
-    {
-        if ((vec[left] <= x) && (vec[mid] >= x))
-        {
-            return binSearch(vec, x, left, mid - 1);
-        }
-        else
-        {
-            return binSearch(vec, x, mid + 1, right);
-        }
-    }
-    else if (vec[right] > vec[mid])
-    {
-        if ((vec[mid] <= x) && (vec[right] >= x))
-        {
-            return binSearch(vec, x, mid + 1, right);
-        }
-        else
-        {
-            return binSearch(vec, x, left, mid - 1);
-        }
-    }
-    else if (vec[mid] == vec[left])
-    {
-        if (vec[mid] != vec[right])
-        {
-            return binSearch(vec, x, mid + 1, right);
-        }
-        else
-        {
-            int result = binSearch(vec, x, left, mid - 1);
-            if(result == -1)
-            {
-                return binSearch(vec, x, mid + 1, right);
-            }
-            else
-            {
-                return result;
-            }
-        }
-    }
+    if (mid > left && vec[mid] < vec[mid - 1] && vec.size() > 2)
+        return (mid - 1);
+
+    if (vec[left] >= vec[mid] && vec.size() > 2)
+        return pivot(vec, left, mid - 1);
+
+    return pivot(vec, mid + 1, right);
 }
 
 int broken_search(const std::vector<int>& vec, int k) {
-    return binSearch(vec, k, 0, vec.size() - 1);
+    int p = pivot(vec, 0, vec.size() - 1);
+
+    auto l_b = std::lower_bound(vec.begin(), vec.begin() + p, k);
+    auto r_b = std::lower_bound(vec.begin() + p, vec.end(), k);
+
+    if (*l_b == k)
+    {
+        return l_b - vec.begin();
+    }
+    else if(*r_b == k)
+    {
+        return r_b - vec.begin();
+    }
+
+    return -1;
 }
 
 void test() {
