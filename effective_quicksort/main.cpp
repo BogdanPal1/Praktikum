@@ -1,16 +1,55 @@
+/*
+ * ID 64549800
+ * Спринт 3. Задача "Эффективная быстрая сортировка"
+ * Палкин Богдан. Когорта 20.
+ *
+ * -- ПРИНЦИП РАБОТЫ --
+ * Программа последовательно считывает данные участников и сохраняет
+ * их в векторе. После этого вызывается функция сортировки, которая
+ * сортирует вектор участников по заданным в задаче условиям.
+ * После сортировки вызывается функция print, которая выводит имена
+ * участников соревнования.
+ *
+ * При решении задачи был использован вид функции сортировки из
+ * стандартной библиотеки С++:
+ * https://en.cppreference.com/w/cpp/algorithm/sort
+ *
+ * Функция сортировки на вход принимает два итератора и
+ * функтор, используемый для сравнения элементов.
+ *
+ * Для реализации метода разделения был использован подход с выбором
+ * в качестве опорного элемента последнего элемента массива, описанный
+ * в книге Алгоритмы: построение и анализ(Томас Х. Кормен, Чарльз И. Лейзерсон,
+ * Рональд Л. Ривест, Клиффорд Штайн.)
+ *
+ * -- ДОКАЗАТЕЛЬСТВО КОРРЕКТНОСТИ --
+ * По условию задачи сортировка не должна потреблять О(n) памяти для
+ * промежуточных данных.
+ *
+ * В данной реализации алгоритма сортировки дополнительная память выделяется
+ * только для итераторов.Промежуточные результаты не хранятся в массивах.
+ * Таким образом алгоритм сортировки потребляет О(1) дополнительной памяти.
+ *
+ * -- ВРЕМЕННАЯ СЛОЖНОСТЬ --
+ * Временная сложность алгоритма составляет в среднем О(nlogn).
+ * Так как массив делится на две части, глубина рекурсии будет равна log n,
+ * при этом на каждом уровне необходимо совершить n сравнений. Вместе
+ * это обусловливает временную сложность алгоритма равную О(nlogn).
+ *
+ * -- ПРОСТРАНСТВЕННАЯ СЛОЖНОСТЬ --
+ * При работе алгоритма не происходит сохранения промежуточных результатов
+ * в дополнительных массивах. Память выделяется только для итераторов,
+ * количество которых постоянно и не зависит от входных данных.
+ *
+ * Таким образом пространственная сложность алгоритма равна О(1).
+ */
+
 #include <iostream>
 #include <string>
 #include <vector>
+#include <tuple>
 
-struct Competitor
-{
-    Competitor(const std::string& name, int solvedProblems, int penalty) :
-        _name(name), _solvedProblems(solvedProblems), _penalty(penalty) {}
-
-    std::string _name = "";
-    int _solvedProblems = 0;
-    int _penalty = 0;
-};
+using Competitor = std::tuple<std::string, int, int>;
 
 using Iterator = std::vector<Competitor>::iterator;
 
@@ -18,36 +57,18 @@ struct Cmp
 {
     bool operator()(const Iterator& first, const Iterator& second)
     {
-        if (first->_solvedProblems == second->_solvedProblems)
+        auto [nameOfFirst, firstSolvedProblems, firstPenalty] = *first;
+        auto [nameOfSecond, secondSolvedProblems, secondPenalty] = *second;
+
+        if (firstSolvedProblems == secondSolvedProblems)
         {
-            if(first->_penalty == second->_penalty)
+            if (firstPenalty == secondPenalty)
             {
-                if (first->_name < second->_name)
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                return nameOfFirst < nameOfSecond;
             }
-            else if (first->_penalty < second->_penalty)
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return firstPenalty < secondPenalty;
         }
-        else if (first->_solvedProblems > second->_solvedProblems)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return firstSolvedProblems > secondSolvedProblems;
     }
 };
 
@@ -84,7 +105,8 @@ void print(const std::vector<Competitor>& vec)
 {
     for (const auto& c : vec)
     {
-        std::cout << c._name << '\n';
+        auto [name, problems, penalty] = c;
+        std::cout << name << '\n';
     }
 }
 
@@ -105,7 +127,7 @@ int main()
         std::cin >> numOfSolvedProblems;
         std::cin >> penalty;
 
-        Competitor c(name, numOfSolvedProblems, penalty);
+        Competitor c = {name, numOfSolvedProblems, penalty};
         v.push_back(c);
     }
 
