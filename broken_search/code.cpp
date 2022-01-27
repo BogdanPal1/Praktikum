@@ -1,5 +1,5 @@
 /*
- * ID 64548252
+ * ID 64568277
  * Спринт 3. Задача "Поиск в сломанном массиве"
  * Палкин Богдан. Когорта 20.
  *
@@ -69,21 +69,32 @@ int pivot(const std::vector<int>& vec, int left, int right)
 }
 
 int broken_search(const std::vector<int>& vec, int k) {
+
     int p = pivot(vec, 0, vec.size() - 1);
 
-    auto l_b = std::lower_bound(vec.begin(), vec.begin() + p, k);
-    auto r_b = std::lower_bound(vec.begin() + p, vec.end(), k);
+    auto posIter = vec.begin();
 
-    if (*l_b == k)
+    if (k >= *vec.begin() && p != -1)
     {
-        return l_b - vec.begin();
+        posIter = std::lower_bound(vec.begin(), vec.begin() + p, k);
     }
-    else if(*r_b == k)
+    else if (k <= *(vec.end() - 1) && p != -1)
     {
-        return r_b - vec.begin();
+        posIter = std::lower_bound(vec.begin() + p, vec.end(), k);
+    }
+    else
+    {
+        posIter = std::lower_bound(vec.begin(), vec.end(), k);
     }
 
-    return -1;
+    if (*posIter != k)
+    {
+        return -1;
+    }
+    else
+    {
+        return posIter - vec.begin();
+    }
 }
 
 void test() {
