@@ -43,44 +43,53 @@
 #include <cassert>
 #include <algorithm>
 
-int pivot(const std::vector<int>& vec, int left, int right)
+auto pivot(const std::vector<int>& vec)
 {
-    if (left > right)
+    if (*vec.begin() < *(vec.end() - 1))
     {
-        return -1;
+        return vec.end();
     }
 
-    if (left == right)
+    auto left = vec.begin();
+    auto right = vec.end();
+
+    while (left != right)
     {
-        return left;
+        auto mid = left + (right - left) / 2;
+
+        if (*mid > *(mid + 1))
+        {
+            return mid;
+        }
+        else if (*mid < *(mid - 1))
+        {
+            return mid - 1;
+        }
+        else if (*left >= *mid)
+        {
+            right = mid - 1;
+        }
+        else
+        {
+            left = mid + 1;
+        }
     }
-
-    int mid = (left + right) / 2;
-    if (mid < right && vec[mid] > vec[mid + 1] && vec.size() > 2)
-        return mid;
-
-    if (mid > left && vec[mid] < vec[mid - 1] && vec.size() > 2)
-        return (mid - 1);
-
-    if (vec[left] >= vec[mid] && vec.size() > 2)
-        return pivot(vec, left, mid - 1);
-
-    return pivot(vec, mid + 1, right);
+    return vec.end();
 }
 
 int broken_search(const std::vector<int>& vec, int k) {
 
-    int p = pivot(vec, 0, vec.size() - 1);
+    auto p = pivot(vec);
 
     auto posIter = vec.begin();
 
-    if (k >= *vec.begin() && p != -1)
+    if (k >= *vec.begin() && p != vec.end())
     {
-        posIter = std::lower_bound(vec.begin(), vec.begin() + p, k);
+        posIter = std::lower_bound(vec.begin(), p, k);
     }
-    else if (k <= *(vec.end() - 1) && p != -1)
+    else if (k <= *(vec.end() - 1) && p != vec.end())
     {
-        posIter = std::lower_bound(vec.begin() + p, vec.end(), k);
+        posIter = std::lower_bound(p, vec.end(), k);
     }
     else
     {
@@ -91,10 +100,8 @@ int broken_search(const std::vector<int>& vec, int k) {
     {
         return -1;
     }
-    else
-    {
-        return posIter - vec.begin();
-    }
+
+    return posIter - vec.begin();
 }
 
 void test() {
