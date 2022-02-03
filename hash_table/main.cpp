@@ -46,19 +46,19 @@ LinkedList::~LinkedList()
 
 void LinkedList::pushFront(int key, int value)
 {
-    Node* newNode = new Node(key, value, _head);
-    _head = newNode;
+    Node* newNode = new Node(key, value, _head->_next);
+    _head->_next = newNode;
     ++_size;
 }
 
 int LinkedList::getFront()
 {
-    return _head->_value;
+    return _head->_next->_value;
 }
 
 std::optional<int> LinkedList::seekAndGet(int key)
 {
-    Node* current = _head;
+    Node* current = _head->_next;
     while (current != nullptr && current->_key != key)
     {
         current = current->_next;
@@ -74,15 +74,20 @@ std::optional<int> LinkedList::seekAndGet(int key)
 std::optional<int> LinkedList::deleteNode(int key)
 {
     Node* current = new Node;
-    current = _head;
+    Node* previous = _head;
+
+    current = _head->_next;
+
     while (current != nullptr && current->_key != key)
     {
+        previous = current;
         current = current->_next;
     }
 
     if (current != nullptr)
     {
         int val = current->_value;
+        previous->_next = current->_next;
         delete current;
         --_size;
         return {val};
@@ -93,7 +98,7 @@ std::optional<int> LinkedList::deleteNode(int key)
 
 void LinkedList::push(int key, int value)
 {
-    Node* current = _head;
+    Node* current = _head->_next;
     while (current != nullptr && current->_key != key)
     {
         current = current->_next;
@@ -118,8 +123,10 @@ public:
     void put(int key, int value);
     std::optional<int> get(int key);
     std::optional<int> deleteKey(int key);
+
 private:
     int hash(int key);
+
 private:
     LinkedList* _data = nullptr;
     std::size_t _size = 0;
@@ -143,15 +150,7 @@ std::optional<int> HashTable::get(int key)
     int index = hash(key);
     if (!_data[index].empty())
     {
-        if (_data[index].getSize() > 1)
-        {
-            return {_data[index].seekAndGet(key)};
-        }
-        else
-        {
-            int i = _data[index].getFront();
-            return {i};
-        }
+        return {_data[index].seekAndGet(key)};
     }
     else
     {
@@ -164,7 +163,7 @@ std::optional<int> HashTable::deleteKey(int key)
     int index = hash(key);
     if (!_data[index].empty())
     {
-        return _data[index].deleteNode(key);
+        return {_data[index].deleteNode(key)};
     }
     else
     {
@@ -189,7 +188,12 @@ int main()
     for (int i = 0; i < numCommands; ++i)
     {
         std::cin >> command;
-        if (command == "get")
+        if(command == "put")
+        {
+            std::cin >> x >> y;
+            t.put(x, y);
+        }
+        else if (command == "get")
         {
             std::cin >> x;
             std::optional<int> res = t.get(x);
@@ -215,20 +219,8 @@ int main()
                 std::cout << "None\n";
             }
         }
-        else if(command == "put")
-        {
-            std::cin >> x >> y;
-            t.put(x, y);
-        }
+
     }
 
     return 0;
 }
-
-
-
-
-
-
-
-
