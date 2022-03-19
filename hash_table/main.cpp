@@ -1,5 +1,5 @@
 /*
- * ID 64880596
+ * ID 64939419
  * Спринт 4. Задача B "Хеш-таблица".
  * Палкин Богдан. Когорта 20.
  *
@@ -18,9 +18,9 @@
  *  - Ключи и значения, id сотрудников и их зарплата, —– целые числа.
  *  - Поддерживать произвольные хешируемые типы не требуется.
  *
- * Для решения ипользовался встроенный вектор, хранящий в себе указатели на
- * связанные списки LLBucket. Связанные списки используются для разрешения
- * коллизий методом цепочек.
+ * Для решения ипользовался встроенный вектор, хранящий в себе двухсвязанные
+ * списки std::list<std::pair<int,int>>. Связанные списки используются для 
+ * разрешения коллизий методом цепочек.
  *
  * -- ДОКАЗАТЕЛЬСТВО КОРРЕКТНОСТИ --
  *
@@ -31,19 +31,24 @@
  *  реализации.
  *
  * Первую часть доказательства можно расписать по пунктам:
- *  1. В решении не используется имеющаяся в С++ реализаци хеш-таблицы
+ *  1. В решении не используется имеющаяся в С++ реализация хеш-таблицы
  *  unordered_map.
  *  2. Максимальный размер выделяемых ячеек для хранения ключей(_capacity)
  *  равен 10000.
- *  3. Для разрешения коллизий используется самописный связанный список
+ *  3. Для разрешения коллизий используется двухсвязанный список std::list
  *  в качестве корзины. Метод цепочек реализуется с использованием связанного
  *  списка.
- *  4. В среднем когда каждая корзина хранит в себе лишь один элемент
+ *  4. В среднем, когда каждая корзина хранит в себе лишь один элемент,
  *  опрерации выполняются за время О(1).
  *  5. Рехеширование и масштабирование не поддерживается.
  *  6. Поддержки произвольных типов нет.
  *
  * Вторая часть доказательства представлена на прилагаемых скриншотах.
+ * На скриншоте TEST_RESULT показаны данные, поданные на вход программы и 
+ * результаты её выполнения.
+ * На скриншоте CONTEST_OUTPUT показан ответ, который должен был быть получен в 
+ * результате корректной работы программы для использованных входных данных.
+ * Данный скриншот взят из Яндекс.Контест для этой задачи.
  *
  * -- ВРЕМЕННАЯ СЛОЖНОСТЬ --
  *
@@ -60,156 +65,74 @@
  * Общая пространственная сложность равна О(N * M).
  */
 
+#include <functional>
+#include <algorithm>
 #include <iostream>
 #include <optional>
 #include <vector>
-
-struct Node
-{
-    Node() = default;
-    Node(int key, int value, Node* next) : _key(key), _value(value), _next(next) {}
-
-    int _key    = 0;
-    int _value  = 0;
-    Node* _next = nullptr;
-};
-
-class LLBucket
-{
-public:
-    LLBucket() {_head = new Node;}
-    ~LLBucket();
-    void pushFront(int key, int value);
-    int getFront();
-    void push(int key, int value);
-    bool empty() const {return _size == 0;}
-    std::optional<int> seekAndGet(int key);
-    std::optional<int> deleteNode(int key);
-
-private:
-    Node* _head       = nullptr;
-    std::size_t _size = 0;
-};
-
-LLBucket::~LLBucket()
-{
-    Node* temp = _head;
-    while(temp != nullptr)
-    {
-        Node* toDelete = temp;
-        temp = temp->_next;
-        delete toDelete;
-    }
-}
-
-void LLBucket::pushFront(int key, int value)
-{
-    Node* newNode = new Node(key, value, _head->_next);
-    _head->_next = newNode;
-    ++_size;
-}
-
-int LLBucket::getFront()
-{
-    return _head->_next->_value;
-}
-
-std::optional<int> LLBucket::seekAndGet(int key)
-{
-    Node* current = _head->_next;
-    while (current != nullptr && current->_key != key)
-    {
-        current = current->_next;
-    }
-
-    if (current != nullptr)
-    {
-        return {current->_value};
-    }
-    return std::nullopt;
-}
-
-std::optional<int> LLBucket::deleteNode(int key)
-{
-    Node* current = new Node;
-    Node* previous = _head;
-
-    current = _head->_next;
-
-    while (current != nullptr && current->_key != key)
-    {
-        previous = current;
-        current = current->_next;
-    }
-
-    if (current != nullptr)
-    {
-        int val = current->_value;
-        previous->_next = current->_next;
-        delete current;
-        --_size;
-        return {val};
-    }
-    delete current;
-    return std::nullopt;
-}
-
-void LLBucket::push(int key, int value)
-{
-    Node* current = _head->_next;
-    while (current != nullptr && current->_key != key)
-    {
-        current = current->_next;
-    }
-
-    if (current != nullptr)
-    {
-        current->_value = value;
-    }
-    else
-    {
-        pushFront(key, value);
-    }
-}
+#include <list>
 
 class HashTable
 {
 public:
-    HashTable() {_data = new LLBucket[_capacity];}
-    ~HashTable() {delete [] _data;}
+    HashTable() {_data.resize(_capacity);}
 
     void put(int key, int value);
     std::optional<int> get(int key);
     std::optional<int> deleteKey(int key);
 
 private:
-    int getIndex(int key);
+    std::size_t getIndex(int key);
 
 private:
-    LLBucket* _data             = nullptr;
+    std::vector<std::list<std::pair<int,int>>> _data;
     const std::size_t _capacity = 10000;
     std::size_t _size           = 0;
 };
 
 void HashTable::put(int key, int value)
 {
-    int index = getIndex(key);
+    std::size_t index = getIndex(key);
     if (_data[index].empty())
     {
-        _data[index].pushFront(key, value);
+        _data[index].push_front({key, value});
     }
     else
     {
-        _data[index].push(key, value);
+        auto pos = std::find_if(_data[index].begin(), _data[index].end(), [key](const std::pair<int,int>& p)
+        {
+            return p.first == key;
+        });
+
+        if(pos != _data[index].end())
+        {
+            pos->second = value;
+        }
+        else
+        {
+            _data[index].push_front({key, value});
+        }
     }
 }
 
 std::optional<int> HashTable::get(int key)
 {
-    int index = getIndex(key);
+    std::size_t index = getIndex(key);
     if (!_data[index].empty())
     {
-        return {_data[index].seekAndGet(key)};
+        auto pos = std::find_if(_data[index].begin(), _data[index].end(), [key](const std::pair<int,int>& p)
+        {
+            return p.first == key;
+        });
+
+        if(pos != _data[index].end())
+        {
+            return {pos->second};
+        }
+        else
+        {
+            return std::nullopt;
+        }
     }
     else
     {
@@ -219,10 +142,23 @@ std::optional<int> HashTable::get(int key)
 
 std::optional<int> HashTable::deleteKey(int key)
 {
-    int index = getIndex(key);
+    std::size_t index = getIndex(key);
     if (!_data[index].empty())
     {
-        return {_data[index].deleteNode(key)};
+        auto pos = std::find_if(_data[index].begin(), _data[index].end(), [key](const std::pair<int,int>& p)
+        {
+            return p.first == key;
+        });
+        if (pos != _data[index].end())
+        {
+            int val = pos->second;
+            _data[index].erase(pos);
+            return {val};
+        }
+        else
+        {
+            return std::nullopt;
+        }
     }
     else
     {
@@ -230,9 +166,9 @@ std::optional<int> HashTable::deleteKey(int key)
     }
 }
 
-int HashTable::getIndex(int key)
+std::size_t HashTable::getIndex(int key)
 {
-    return key % _capacity;
+    return std::hash<int>{}(key) % _capacity;
 }
 
 
