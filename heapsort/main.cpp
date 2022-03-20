@@ -34,10 +34,11 @@ public:
     Heap(std::size_t size, std::size_t capacity) : _size(size), _data(capacity, Competitor()){}
     void add(const Competitor& competitor);
     Competitor getMaxPriority();
-    void print();
+
 private:
     void siftUp(std::size_t index);
     void siftDown(std::size_t index);
+
 private:
     std::size_t _size = 0;
     std::size_t _index = 0;
@@ -58,15 +59,6 @@ Competitor Heap::getMaxPriority()
     --_size;
     siftDown(1);
     return res;
-}
-
-void Heap::print()
-{
-    for (const auto& c : _data)
-    {
-
-        std::cout << c._name << '\n';
-    }
 }
 
 void Heap::siftUp(std::size_t index)
@@ -107,6 +99,20 @@ void Heap::siftDown(std::size_t index)
     }
 }
 
+void heapsort(std::vector<Competitor>& vec)
+{
+    Heap h(vec.size(), (vec.size() + 1));
+
+    for (const auto& c : vec)
+    {
+        h.add(c);
+    }
+
+    for (std::size_t i = 0; i < vec.size(); ++i)
+    {
+        vec[i] = h.getMaxPriority();
+    }
+}
 
 int main()
 {
@@ -114,9 +120,9 @@ int main()
     int numOfSolvedProblems = 0;
     int penalty = 0;
     std::string name = "";
+    std::vector<Competitor> vec;
 
     std::cin >> numOfCompetitors;
-    Heap h(numOfCompetitors, (numOfCompetitors + 1));
 
     for (int i = 0; i < numOfCompetitors; ++i)
     {
@@ -125,21 +131,15 @@ int main()
         std::cin >> penalty;
 
         Competitor c(name, numOfSolvedProblems, penalty);
-        h.add(c);
+        vec.push_back(c);
     }
 
-    std::vector<Competitor> v;
-    for (int i = 1; i < numOfCompetitors + 1; ++i)
-    {
-        v.push_back(h.getMaxPriority());
-    }
+    heapsort(vec);
 
-    for (const auto& c : v)
+    for (const auto& c : vec)
     {
         std::cout << c._name << '\n';
     }
 
-
     return 0;
 }
-
